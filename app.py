@@ -37,13 +37,3 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=True)
-```
-
----
-
-**File 2: `requirements.txt`**
-```
-flask
-twilio
-google-generativeai
-gunicorn
