@@ -1,10 +1,12 @@
 import os
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import anthropic
+import google.generativeai as genai
 
 app = Flask(__name__)
-client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 conversation_history = {}
 
@@ -14,29 +16,17 @@ SYSTEM_PROMPT = "You are Simran's AI learning coach. She is a fintech PM learnin
 def webhook():
     incoming_msg = request.values.get("Body", "").strip()
     sender = request.values.get("From", "")
-    
+
     if sender not in conversation_history:
-        conversation_history[sender] = []
-    
-    conversation_history[sender].append({
-        "role": "user",
-        "content": incoming_msg
-    })
-    
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=500,
-        system=SYSTEM_PROMPT,
-        messages=conversation_history[sender]
-    )
-    
-    reply = response.content[0].text
-    
-    conversation_history[sender].append({
-        "role": "assistant",
-        "content": reply
-    })
-    
+        conversation_history[sender] = model.start_chat(history=[])
+
+    chat = conversation_history[sender]
+
+    full_msg = SYSTEM_PROMPT + "\n\nUser: " + incoming_msg if len(chat.history) == 0 else incoming_msg
+
+    response = chat.send_message(full_msg)
+    reply = response.text
+
     resp = MessagingResponse()
     resp.message(reply)
     return str(resp)
@@ -47,3 +37,13 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=True)
+```
+
+---
+
+**File 2: `requirements.txt`**
+```
+flask
+twilio
+google-generativeai
+gunicorn
