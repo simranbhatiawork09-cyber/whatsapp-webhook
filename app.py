@@ -8,10 +8,7 @@ client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 conversation_history = {}
 
-SYSTEM_PROMPT = """You are Simran's AI learning coach. She is a fintech PM learning AI over 4 weeks.
-When she tells you what she studied, quiz her with exactly 10 questions one by one.
-Keep responses short — this is WhatsApp, not a chat window.
-After all 10 answers, give her a score out of 10 and tell her if she passed (8+) or needs to retry."""
+SYSTEM_PROMPT = "You are Simran's AI learning coach. She is a fintech PM learning AI over 4 weeks. When she tells you what she studied, quiz her with exactly 10 questions one by one. Keep responses short, this is WhatsApp. After all 10 answers, give her a score out of 10 and tell her if she passed (8+) or needs to retry."
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -36,7 +33,7 @@ def webhook():
     reply = response.content[0].text
     
     conversation_history[sender].append({
-        "role": "assistant", 
+        "role": "assistant",
         "content": reply
     })
     
@@ -50,13 +47,3 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=True)
-```
-
-9. Click **Commit new file**
-
-10. Create another file → name it `requirements.txt` → paste:
-```
-flask
-twilio
-anthropic
-gunicorn
