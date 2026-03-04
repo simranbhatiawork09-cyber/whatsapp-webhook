@@ -1,12 +1,12 @@
 import os
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import google.genai as genai
+from google import genai
+from google.genai import types
 
 app = Flask(__name__)
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 conversation_history = {}
 
@@ -18,14 +18,23 @@ def webhook():
     sender = request.values.get("From", "")
 
     if sender not in conversation_history:
-        conversation_history[sender] = model.start_chat(history=[])
+        conversation_history[sender] = []
 
-    chat = conversation_history[sender]
+    conversation_history[sender].append(
+        types.Content(role="user", parts=[types.Part(text=incoming_msg)])
+    )
 
-    full_msg = SYSTEM_PROMPT + "\n\nUser: " + incoming_msg if len(chat.history) == 0 else incoming_msg
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
+        contents=conversation_history[sender]
+    )
 
-    response = chat.send_message(full_msg)
     reply = response.text
+
+    conversation_history[sender].append(
+        types.Content(role="model", parts=[types.Part(text=reply)])
+    )
 
     resp = MessagingResponse()
     resp.message(reply)
