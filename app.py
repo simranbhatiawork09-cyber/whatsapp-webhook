@@ -25,7 +25,7 @@ When she tells you what she studied, quiz her with exactly 10 questions one by o
 
 def send_telegram_message(chat_id, text):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    requests.post(url, json={"chat_id": chat_id, "text": text, "parse_mode": "Markdown"})
+    requests.post(url, json={"chat_id": chat_id, "text": text})
 
 def sync_to_sheets(module, status, score):
     try:
@@ -95,16 +95,15 @@ def webhook():
 
     if user_text == "/start":
         send_telegram_message(chat_id,
-            "👋 *Hey Simran!*\n\nI'm your AI learning coach.\n\nTell me what you studied today and I'll quiz you on it!\n\nFor example: _'I studied how LLMs work — 3Blue1Brown Neural Networks'_")
+            "Hey Simran! I'm your AI learning coach.\n\nTell me what you studied today and I'll quiz you on it!\n\nFor example: 'I studied how LLMs work — 3Blue1Brown Neural Networks'")
         return "ok", 200
 
     if user_text == "/reset":
         conversation_history[user_id] = []
         quiz_state[user_id] = {}
-        send_telegram_message(chat_id, "✅ Conversation reset. Tell me what you studied!")
+        send_telegram_message(chat_id, "Conversation reset. Tell me what you studied!")
         return "ok", 200
 
-    # Track module from first message after reset
     if user_id not in quiz_state or not quiz_state[user_id].get("module"):
         quiz_state[user_id] = {"module": user_text[:100], "synced": False}
         print(f"Module set: {user_text[:100]}")
@@ -124,7 +123,7 @@ def webhook():
 
     except Exception as e:
         print(f"Error: {e}")
-        send_telegram_message(chat_id, f"❌ Something went wrong: {str(e)}")
+        send_telegram_message(chat_id, f"Something went wrong: {str(e)}")
 
     return "ok", 200
 
